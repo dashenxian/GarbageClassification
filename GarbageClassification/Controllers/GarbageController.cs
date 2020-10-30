@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using GarbageClassification.DataModels;
 using GarbageClassification.MLModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -15,23 +16,32 @@ namespace GarbageClassification.Controllers
     {
         private readonly ILogger<GarbageController> _logger;
         private readonly GarbageModel _garbageModel;
+        private readonly FileHelper _fileHelper;
 
-        public GarbageController(ILogger<GarbageController> logger,GarbageModel garbageModel)
+        public GarbageController(ILogger<GarbageController> logger, GarbageModel garbageModel, FileHelper fileHelper)
         {
             _logger = logger;
             _garbageModel = garbageModel;
+            _fileHelper = fileHelper;
         }
-        [HttpGet]
-        public string Predict()
+        [HttpPost]
+        public async Task<string> Predict(IFormFile file)
         {
-            var path = @"C:\Users\Administrator\Desktop\ConsoleApp3\test\u=3638281207,2552637354&fm=26&gp=0.jpg";
-            var input = new GarbageData()
+            var filePath = await _fileHelper.WriteFile(file, "temp");
+            try
             {
-                ImageSource = path,
-            };
-           var result= _garbageModel.Predict(input);
-
-           return result.Prediction;
+                var absFilePath = _fileHelper.GetFilePath(filePath);
+                var input = new GarbageData()
+                {
+                    ImageSource = absFilePath,
+                };
+                var result = _garbageModel.Predict(input);
+                return result.Prediction;
+            }
+            finally
+            {
+                await _fileHelper.DeleteFile(filePath);
+            }
         }
     }
 }

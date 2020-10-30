@@ -31,13 +31,14 @@ namespace GarbageClassification
         {
             services.AddPredictionEnginePool<GarbageData, GarbagePrediction>().FromFile("MLModels/GarbageModel.zip", true);
             services.AddScoped<GarbageModel>();
+            services.AddSingleton<FileHelper>();
             //services.AddControllers();
             services.AddMvc();
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-            }); 
+            });
             //services.AddSwaggerGenNewtonsoftSupport();
         }
 
